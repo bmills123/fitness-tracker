@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boyd's Coaching Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --steel-blue: #2C3E50;
+            --iron-gray: #34495E;
+            --power-red: #E74C3C;
+            --energy-orange: #E67E22;
+            --muscle-green: #27AE60;
+            --light-bg: #ECF0F1;
+            --white: #FFFFFF;
+            --dark-text: #2C3E50;
+            --light-text: #7F8C8D;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-text);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(44, 62, 80, 0.02) 2px,
+                    rgba(44, 62, 80, 0.02) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--steel-blue), var(--iron-gray));
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(44, 62, 80, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(231, 76, 60, 0.15), transparent);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 300;
+        }
+
+        .stats-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--energy-orange);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab-btn {
+            background: var(--white);
+            border: 2px solid var(--steel-blue);
+            color: var(--steel-blue);
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.1);
+        }
+
+        .tab-btn:hover {
+            background: var(--steel-blue);
+            color: var(--white);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(44, 62, 80, 0.2);
+        }
+
+        .tab-btn.active {
+            background: var(--power-red);
+            border-color: var(--power-red);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(44, 62, 80, 0.15);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(44, 62, 80, 0.2);
+            border-color: var(--power-red);
+        }
+
+        .card h2 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2rem;
+            color: var(--steel-blue);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--power-red);
+            padding-bottom: 10px;
+        }
+
+        .workout-day {
+            background: linear-gradient(135deg, var(--light-bg) 0%, #dfe6e9 100%);
+            border-left: 5px solid var(--power-red);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .workout-day:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(44, 62, 80, 0.1);
+        }
+
+        .workout-day h3 {
+            font-family: 'Oswald', sans-serif;
+            color: var(--power-red);
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .exercise-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        .exercise-item {
+            color: var(--dark-text);
+            line-height: 1.8;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .exercise-item::before {
+            content: '▸';
+            color: var(--power-red);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .nutrition-item {
+            background: linear-gradient(135deg, #ffffff 0%, var(--light-bg) 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid var(--muscle-green);
+            transition: all 0.3s ease;
+        }
+
+        .nutrition-item:hover {
+            box-shadow: 0 5px 20px rgba(39, 174, 96, 0.2);
+            transform: scale(1.02);
+        }
+
+        .nutrition-item h3 {
+            font-family: 'Oswald', sans-serif;
+            color: var(--muscle-green);
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .macros {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .macro-badge {
+            background: var(--steel-blue);
+            color: var(--white);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--power-red), var(--energy-orange));
+            border: none;
+            color: white;
+            padding: 18px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3);
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            border: 2px solid var(--steel-blue);
+            color: var(--steel-blue);
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--steel-blue);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .phase-indicator {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--muscle-green);
+            color: white;
+            border-radius: 25px;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(39, 174, 96, 0);
+            }
+        }
+
+        .injury-warning {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 5px solid var(--energy-orange);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .injury-warning h4 {
+            color: var(--energy-orange);
+            font-family: 'Oswald', sans-serif;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .injury-warning ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .injury-warning li {
+            padding: 5px 0;
+            color: var(--dark-text);
+        }
+
+        .injury-warning li::before {
+            content: '⚠';
+            margin-right: 10px;
+            color: var(--energy-orange);
+        }
+
+        .progress-section {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(44, 62, 80, 0.15);
+            margin-bottom: 30px;
+        }
+
+        .progress-bar-container {
+            margin: 20px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--steel-blue);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: var(--light-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--power-red), var(--energy-orange));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+
+        .ai-coach-section {
+            background: linear-gradient(135deg, var(--steel-blue), var(--iron-gray));
+            color: var(--white);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(44, 62, 80, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .ai-coach-section h2 {
+            color: var(--white);
+            border-bottom: 3px solid var(--energy-orange);
+        }
+
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .message {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .message.user {
+            background: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid var(--power-red);
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            font-family: 'Lato', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .message-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--energy-orange);
+            box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            border: 5px solid rgba(231, 76, 60, 0.2);
+            border-top: 5px solid var(--power-red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .goal-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .goal-timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--power-red), var(--muscle-green));
+            z-index: 0;
+        }
+
+        .timeline-point {
+            background: var(--white);
+            border: 4px solid var(--power-red);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.2);
+        }
+
+        .timeline-point.current {
+            border-color: var(--energy-orange);
+            background: var(--energy-orange);
+            color: var(--white);
+            transform: scale(1.2);
+        }
+
+        .timeline-point.future {
+            border-color: var(--muscle-green);
+        }
+
+        .timeline-label {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .goal-timeline {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .goal-timeline::before {
+                width: 4px;
+                height: 100%;
+                left: 50%;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>Boyd's Coaching Dashboard</h1>
+                <p class="subtitle">Expert-Guided Muscle Building & Strength Program</p>
+                <div class="stats-banner">
+                    <div class="stat-card">
+                        <span class="stat-value">203</span>
+                        <span class="stat-label">Current Weight (lbs)</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">200g</span>
+                        <span class="stat-label">Daily Protein</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">5'10"</span>
+                        <span class="stat-label">Height</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">27</span>
+                        <span class="stat-label">Age</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="switchTab('training')">Training Split</button>
+            <button class="tab-btn" onclick="switchTab('graphs')">Progress Graphs</button>
+            <button class="tab-btn" onclick="switchTab('coach')">AI Coach</button>
+            <button class="tab-btn" onclick="switchTab('progress')">Progress</button>
+        </div>
+
+        <!-- Overview Section -->
+        <div id="overview" class="section active">
+            <div class="card">
+                <div class="phase-indicator" id="currentPhase">BULK PHASE - MUSCLE BUILDING</div>
+                <h2>Your Journey</h2>
+                
+                <div class="goal-timeline">
+                    <div>
+                        <div class="timeline-point current">
+                            <span style="font-size: 1.2rem;">🏋️</span>
+                        </div>
+                        <div class="timeline-label">NOW<br>Bulking</div>
+                    </div>
+                    <div>
+                        <div class="timeline-point future">
+                            <span style="font-size: 1.2rem;">☀️</span>
+                        </div>
+                        <div class="timeline-label">SUMMER<br>Field Season</div>
+                    </div>
+                    <div>
+                        <div class="timeline-point future">
+                            <span style="font-size: 1.2rem;">💪</span>
+                        </div>
+                        <div class="timeline-label">GOAL<br>Lean & Strong</div>
+                    </div>
+                </div>
+
+                <div class="injury-warning">
+                    <h4>Injury Considerations</h4>
+                    <ul>
+                        <li>Left elbow pain with curls and hanging exercises - modified grip variations recommended</li>
+                        <li>Previous shoulder injuries - avoid incline bench, use moderate weight on overhead movements</li>
+                        <li>Lower back stiffness - emphasis on core stability and proper form</li>
+                    </ul>
+                </div>
+
+                <p style="line-height: 1.8; margin-top: 20px;">
+                    <strong>Your Mission:</strong> Build quality muscle mass during your bulk phase while working around injury limitations. 
+                    Transition to a strategic cut during summer field season (maintaining 4-5 gym days) to reveal your hard-earned muscle 
+                    while your physically demanding work naturally increases caloric expenditure.
+                </p>
+
+                <button class="btn-primary" onclick="switchTab('training'); document.querySelector('[onclick=\\'switchTab(\\'training\\')\\']').classList.add('active');">View Current Training Plan</button>
+            </div>
+
+            <div class="content-grid" style="margin-top: 30px;">
+                <div class="card">
+                    <h2>Training Overview</h2>
+                    <div class="exercise-list">
+                        <div class="exercise-item">Monday: Chest (shoulder-safe variations)</div>
+                        <div class="exercise-item">Tuesday: Back & Biceps (elbow-friendly)</div>
+                        <div class="exercise-item">Wednesday: Legs & Abs (core stability focus)</div>
+                        <div class="exercise-item">Thursday: Shoulders (injury-aware progression)</div>
+                        <div class="exercise-item">Friday: Arms (modified grip techniques)</div>
+                        <div class="exercise-item">Saturday: Active recovery (pickleball, swim, yoga)</div>
+                        <div class="exercise-item">1x Weekly: Intense cardio session</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Current Focus</h2>
+                    <p style="line-height: 1.8; margin-bottom: 15px;">
+                        <strong>Bulk Phase Priorities:</strong>
+                    </p>
+                    <div class="exercise-list">
+                        <div class="exercise-item">Progressive overload on compound lifts</div>
+                        <div class="exercise-item">Hypertrophy rep ranges (8-12 reps)</div>
+                        <div class="exercise-item">Adequate volume per muscle group</div>
+                        <div class="exercise-item">Work around injuries with smart exercise selection</div>
+                        <div class="exercise-item">Maintain 200g+ protein daily</div>
+                        <div class="exercise-item">7-8 hours quality sleep for recovery</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Split Section -->
+        <div id="training" class="section">
+            <div class="loading" id="trainingLoading">
+                <div class="spinner"></div>
+                <p style="color: var(--steel-blue); font-weight: 600;">AI Coach is creating your personalized training plan...</p>
+            </div>
+
+            <div id="trainingContent"></div>
+        </div>
+
+        <!-- AI Coach Section -->
+        <div id="coach" class="section">
+            <div class="ai-coach-section">
+                <h2>Your AI Coach</h2>
+                <p style="margin-bottom: 20px; line-height: 1.8;">
+                    Ask me anything about your training, nutrition, injury management, or adjustments needed for your field season. 
+                    I'll provide personalized guidance based on your specific context.
+                </p>
+
+                <div class="chat-container" id="chatContainer">
+                    <div class="message">
+                        <strong>Coach:</strong> Hey Boyd! I'm here to help optimize your training and nutrition. Whether you need exercise substitutions for your elbow, 
+                        want to discuss your upcoming field season prep, or need meal ideas that fit your high-protein whole foods approach, just ask. What's on your mind?
+                    </div>
+                </div>
+
+                <textarea class="message-input" id="coachInput" placeholder="Ask your coach anything... (e.g., 'My elbow is bothering me today, what can I do instead of curls?' or 'Give me 3 high-protein dinner ideas')"></textarea>
+                <button class="btn-primary" onclick="askCoach()">Send Message</button>
+            </div>
+        </div>
+
+        <!-- Progress Graphs Section -->
+        <div id="graphs" class="section">
+            <div class="card" style="margin-bottom: 20px;">
+                <h2>Exercise Progress Graphs</h2>
+                <p style="color: var(--light-text); margin-bottom: 20px;">
+                    Track your strength progression over time. Each graph shows your weight entries for a specific exercise.
+                </p>
+                
+                <div style="margin-top: 20px;">
+                    <label style="color: var(--steel-blue); font-weight: 600; margin-bottom: 10px; display: block;">Select Day:</label>
+                    <select id="graphDaySelect" onchange="updateGraphDay()" style="padding: 12px; border: 2px solid var(--steel-blue); border-radius: 8px; font-size: 1rem; width: 100%; max-width: 300px; background: white;">
+                        <option value="monday">Monday - Chest</option>
+                        <option value="tuesday">Tuesday - Back & Biceps</option>
+                        <option value="wednesday">Wednesday - Legs & Abs</option>
+                        <option value="thursday">Thursday - Shoulders</option>
+                        <option value="friday">Friday - Arms</option>
+                    </select>
+                    <button onclick="debugWeightHistory()" style="margin-top: 10px; padding: 8px 16px; background: var(--energy-orange); color: white; border: none; border-radius: 6px; cursor: pointer;">🔍 Debug: Show Saved Data</button>
+                </div>
+
+                <div id="graphsContainer"></div>
+            </div>
+        </div>
+
+        <!-- AI Coach Section -->
+        <div id="coach" class="section">
+            <div class="ai-coach-section">
+                <h2>Your AI Coach</h2>
+                <p style="margin-bottom: 20px; line-height: 1.8;">
+                    Ask me anything about your training, nutrition, injury management, or adjustments needed for your field season. 
+                    I'll provide personalized guidance based on your specific context.
+                </p>
+
+                <div class="chat-container" id="chatContainer">
+                    <div class="message">
+                        <strong>Coach:</strong> Hey Boyd! I'm here to help optimize your training and nutrition. Whether you need exercise substitutions for your elbow, 
+                        want to discuss your upcoming field season prep, or need meal ideas that fit your high-protein whole foods approach, just ask. What's on your mind?
+                    </div>
+                </div>
+
+                <textarea class="message-input" id="coachInput" placeholder="Ask your coach anything... (e.g., 'My elbow is bothering me today, what can I do instead of curls?' or 'Give me 3 high-protein dinner ideas')"></textarea>
+                <button class="btn-primary" onclick="askCoach()">Send Message</button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progress" class="section">
+            <div class="progress-section">
+                <h2 style="font-family: 'Oswald', sans-serif; color: var(--steel-blue); margin-bottom: 20px;">Goal Progress Tracker</h2>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-label">
+                        <span>Weekly Training Completion</span>
+                        <span id="weeklyProgress">0/5 Days</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="weeklyProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; background: var(--light-bg); padding: 20px; border-radius: 12px; border: 2px solid var(--steel-blue);">
+                    <h3 style="font-family: 'Oswald', sans-serif; color: var(--steel-blue); margin-bottom: 15px;">Current Bodyweight</h3>
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <div style="font-size: 3rem; font-family: 'Oswald', sans-serif; color: var(--power-red); font-weight: 700;" id="currentBodyweight">203 lbs</div>
+                            <div style="color: var(--light-text); font-size: 0.9rem;" id="lastWeightUpdate">Starting weight</div>
+                        </div>
+                        <div style="flex: 1; min-width: 300px;">
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--steel-blue);">New Weight (lbs)</label>
+                                <input 
+                                    type="number" 
+                                    id="newBodyweight" 
+                                    placeholder="Enter weight"
+                                    step="0.1"
+                                    style="padding: 12px; border: 2px solid var(--steel-blue); border-radius: 8px; font-size: 1rem; width: 100%;"
+                                >
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--steel-blue);">Progress Photo (optional)</label>
+                                <input 
+                                    type="file" 
+                                    id="progressPhoto" 
+                                    accept="image/*"
+                                    style="padding: 8px; border: 2px solid var(--steel-blue); border-radius: 8px; font-size: 0.9rem; width: 100%; background: white;"
+                                >
+                            </div>
+                            <button 
+                                data-action="update-bodyweight"
+                                class="history-action-btn"
+                                style="padding: 12px 24px; background: var(--power-red); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; width: 100%;"
+                            >
+                                Update Weight
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bodyweight Graph -->
+                <div style="margin-top: 30px; background: white; padding: 25px; border-radius: 12px; border: 2px solid var(--steel-blue);">
+                    <h3 style="font-family: 'Oswald', sans-serif; color: var(--steel-blue); margin-bottom: 20px;">Bodyweight Progress</h3>
+                    <canvas id="bodyweightChart" style="max-height: 300px;"></canvas>
+                    <div id="bodyweightChartEmpty" style="display: none; text-align: center; padding: 60px 20px; color: var(--light-text);">
+                        <p>Start logging your bodyweight to see your progress graph!</p>
+                    </div>
+                </div>
+
+                <!-- Bodyweight History with Photos -->
+                <div style="margin-top: 30px; background: var(--light-bg); padding: 25px; border-radius: 12px;">
+                    <h3 style="font-family: 'Oswald', sans-serif; color: var(--steel-blue); margin-bottom: 20px;">Bodyweight History</h3>
+                    <div id="bodyweightHistory"></div>
+                </div>
+            </div>
+
+            <div id="progressHistory" class="card">
+                <h2>Recent History</h2>
+                <div id="historyContent">
+                    <p style="color: var(--light-text); text-align: center; padding: 40px;">
+                        Start logging your workouts to see your progress here!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Boyd's specific data
+        const boydProfile = {
+            age: 27,
+            weight: 203,
+            height: "5'10\"",
+            proteinGoal: 200,
+            fitnessLevel: "intermediate",
+            currentPhase: "bulk",
+            injuryConsiderations: {
+                leftElbow: "Pain with curls and hanging exercises",
+                shoulders: "Previous injuries, avoid incline bench",
+                lowerBack: "Stiffness from overexertion"
+            },
+            schedule: {
+                monday: "Chest",
+                tuesday: "Back & Biceps",
+                wednesday: "Legs & Abs",
+                thursday: "Shoulders",
+                friday: "Arms",
+                saturday: "Active Recovery"
+            },
+            diet: "High protein, whole foods, 200g protein, no restrictions",
+            workLocation: "Home-based, nearby gym",
+            summerWork: "Field surveys - physically demanding",
+            activities: ["Pickleball", "Swimming", "Yoga", "Walking"],
+            goalTimeline: "1 year - bulk then cut for summer"
+        };
+
+        // Boyd's current training split with actual exercises
+        const currentWorkoutPlan = {
+            monday: {
+                focus: "Chest",
+                warmup: "Stairmaster or Assault bike 10-15 mins, Stretch shoulders and chest 10 mins",
+                exercises: [
+                    {name: "High to Low Cable Fly", sets: "3", reps: "12/10/8", weight: "17.5/20/22.5 lbs"},
+                    {name: "Low to High Cable Fly", sets: "3", reps: "12/10/8", weight: "17.5/20/22.5 lbs"},
+                    {name: "Bench Press", sets: "4", reps: "12/12/10/8", weight: "45/135/185/225 lbs", notes: "Progressive overload target"},
+                    {name: "Machine Press", sets: "3", reps: "12", weight: ""},
+                    {name: "Dumbbell Press", sets: "3", reps: "12", weight: ""},
+                    {name: "Machine Decline Press", sets: "3", reps: "12/10/8", weight: "90/140/180 lbs"}
+                ]
+            },
+            tuesday: {
+                focus: "Back & Biceps",
+                warmup: "Stairmaster or Assault bike 10-15 mins, Stretch arms 10 mins",
+                exercises: [
+                    {name: "Straight Arm Cable Pulldown", sets: "3", reps: "12", weight: "50/70/70 lbs"},
+                    {name: "Single Arm Lat Pulldown", sets: "3", reps: "12", weight: "35/50/50 lbs"},
+                    {name: "Lat Pulldown", sets: "3", reps: "12/12/10", weight: "100/115/160 lbs"},
+                    {name: "Close Grip Lat Pulldown", sets: "3", reps: "12/10/10", weight: "85/115/115 lbs"},
+                    {name: "Cable Row", sets: "4", reps: "12/12/10/10", weight: "90/120/120/100 lbs"},
+                    {name: "Rear Delt Fly Machine", sets: "3", reps: "12", weight: "115/145/145 lbs"},
+                    {name: "Dumbbell Shrugs", sets: "3", reps: "12", weight: "60/75/85 lbs"}
+                ]
+            },
+            wednesday: {
+                focus: "Legs & Abs",
+                warmup: "Assault bike or Stairmaster 10-15 mins, Stretch legs 10 mins",
+                exercises: [
+                    {name: "Leg Press", sets: "4", reps: "12/12/8/8", weight: "225/315/405/315 lbs"},
+                    {name: "Calf Raises (Leg Press)", sets: "3", reps: "16", weight: "315 lbs"},
+                    {name: "Dumbbell RDLs", sets: "3", reps: "12", weight: "60/85/85 lbs (per hand)", notes: "Back-safe variation"},
+                    {name: "Leg Extension Machine", sets: "3", reps: "12", weight: "200 lbs"},
+                    {name: "Leg Curl Machine", sets: "3", reps: "12/8/8", weight: "100/115/115 lbs"},
+                    {name: "Hip Thrust Machine", sets: "3", reps: "12/8/8", weight: "70/90/135 lbs"},
+                    {name: "Standing Hip Extension", sets: "4", reps: "12", weight: "BW/45/90/90 lbs"},
+                    {name: "Hip Abductor Machine", sets: "3", reps: "12", weight: "150/200/200 lbs"},
+                    {name: "Cable Abs Pulldown", sets: "4", reps: "20", weight: "80/100/100/80 lbs"},
+                    {name: "Dumbbell Side Bend", sets: "3", reps: "15/12/12", weight: "45/60/60 lbs each side", notes: "Alt: Floor crunches circuit + decline sit-ups"}
+                ]
+            },
+            thursday: {
+                focus: "Shoulders",
+                warmup: "Stairmaster or Assault bike 10-15 mins, Stretch shoulders",
+                exercises: [
+                    {name: "Lateral Raises", sets: "4", reps: "12", weight: "15/20/30/30 lbs"},
+                    {name: "Seated Dumbbell Lateral Raise", sets: "3", reps: "12", weight: "20/25/25 lbs"},
+                    {name: "Trap Raises", sets: "3", reps: "12", weight: "12.5/15/15 lbs"},
+                    {name: "Overhead Dumbbell Press", sets: "3", reps: "12", weight: "35/50/50 lbs", notes: "Moderate weight for shoulder safety"},
+                    {name: "Plate Front Raise", sets: "3", reps: "20/15/10", weight: "25 lbs"},
+                    {name: "Cable Single-Arm Front Raise", sets: "3", reps: "12", weight: "15 lbs"},
+                    {name: "Cable One Arm Lateral Raise", sets: "3", reps: "12", weight: "15/20/20 lbs both sides"},
+                    {name: "Face Pull", sets: "3", reps: "12", weight: "45/50/50 lbs"},
+                    {name: "Rear Delt Fly Machine", sets: "3", reps: "12", weight: "85/115/145 lbs"}
+                ]
+            },
+            friday: {
+                focus: "Arms",
+                warmup: "Stairmaster or Assault bike 10-15 mins, Stretch arms 10 mins",
+                exercises: [
+                    {name: "Cable Triceps Extension", sets: "3", reps: "12", weight: "50/80/100 lbs"},
+                    {name: "Overhead Triceps Cable Extension", sets: "3", reps: "12", weight: "40/60/60 lbs"},
+                    {name: "Single Arm Cable Triceps Extension", sets: "3", reps: "12", weight: "15/20/20 lbs"},
+                    {name: "Cable Bicep Curl", sets: "3", reps: "12", weight: "60 lbs", notes: "Cable variations easier on elbow"},
+                    {name: "Cable One Arm Inner Bicep Curl", sets: "3", reps: "12", weight: "20 lbs"},
+                    {name: "Dumbbell Curls", sets: "3", reps: "12", weight: "20/30/30 lbs"},
+                    {name: "Hammer Curls", sets: "3", reps: "12/12/10", weight: "25/35/35 lbs", notes: "Neutral grip protects elbow"},
+                    {name: "Cross Body Hammer Curls", sets: "3", reps: "12/10/10", weight: "25/35/35 lbs"},
+                    {name: "EZ Bar Curls", sets: "3", reps: "12/12/10", weight: "40/60/60 lbs"}
+                ]
+            },
+            saturday: {
+                focus: "Active Recovery",
+                activities: ["Pickleball", "Hiking", "Swimming", "Yoga", "Walking"]
+            }
+        };
+
+        // Function to extract highest weight from a weight string
+        function extractHighestWeight(weightStr) {
+            if (!weightStr) return '';
+            
+            // Handle special cases like "BW/45/90/90 lbs" (bodyweight variations)
+            if (weightStr.toLowerCase().includes('bw')) {
+                // Extract just the numeric weights, ignore BW
+                weightStr = weightStr.replace(/bw\/?/gi, '');
+            }
+            
+            // Remove text like "per hand", "each side", "both sides", etc
+            weightStr = weightStr.replace(/\(.*?\)/g, '');
+            weightStr = weightStr.replace(/per hand|each side|both sides/gi, '');
+            
+            // Extract all numbers (including decimals)
+            const numbers = weightStr.match(/\d+\.?\d*/g);
+            
+            if (!numbers || numbers.length === 0) return '';
+            
+            // Convert to numbers and get the max
+            const weights = numbers.map(n => parseFloat(n)).filter(n => !isNaN(n));
+            
+            if (weights.length === 0) return '';
+            
+            const maxWeight = Math.max(...weights);
+            return maxWeight + ' lbs';
+        }
+
+        // Normalize all exercises to 3x12 format with highest weight only
+        Object.keys(currentWorkoutPlan).forEach(day => {
+            if (currentWorkoutPlan[day].exercises) {
+                currentWorkoutPlan[day].exercises = currentWorkoutPlan[day].exercises.map(ex => ({
+                    name: ex.name,
+                    reps: '12',
+                    weight: extractHighestWeight(ex.weight),
+                    notes: ex.notes || ''
+                }));
+            }
+        });
+
+        let trainingPlan = currentWorkoutPlan;
+        let nutritionPlan = null;
+        let progressData = {
+            workoutsCompleted: 0,
+            weeklyGoal: 5,
+            nutritionDays: 0,
+            startDate: new Date().toLocaleDateString(),
+            history: [],
+            currentBodyweight: 203,
+            bodyweightHistory: []
+        };
+        let weightHistory = {}; // Format: { "monday-0": [{date: "1/1/24", weight: "135 lbs"}, ...], ... }
+
+        // Storage wrapper that uses window.storage if available, localStorage as fallback
+        const storage = {
+            async set(key, value) {
+                try {
+                    if (window.storage) {
+                        return await window.storage.set(key, value);
+                    }
+                } catch (error) {
+                    // Silently fall back to localStorage
+                }
+                
+                // Fallback to localStorage
+                try {
+                    localStorage.setItem(key, value);
+                    return { key, value };
+                } catch (error) {
+                    return null;
+                }
+            },
+            
+            async get(key) {
+                try {
+                    if (window.storage) {
+                        return await window.storage.get(key);
+                    }
+                } catch (error) {
+                    // Silently fall back to localStorage
+                }
+                
+                // Fallback to localStorage
+                try {
+                    const value = localStorage.getItem(key);
+                    return value ? { key, value } : null;
+                } catch (error) {
+                    return null;
+                }
+            }
+        };
+
+        // Load saved data
+        async function loadSavedData() {
+            try {
+                // Load saved weights
+                const weightsResult = await storage.get('boyd-current-weights');
+                if (weightsResult) {
+                    const savedPlan = JSON.parse(weightsResult.value);
+                    // Merge saved weights with current plan structure
+                    Object.keys(savedPlan).forEach(day => {
+                        if (trainingPlan[day] && savedPlan[day].exercises) {
+                            savedPlan[day].exercises.forEach((savedEx, idx) => {
+                                if (trainingPlan[day].exercises[idx]) {
+                                    trainingPlan[day].exercises[idx].weight = savedEx.weight;
+                                    trainingPlan[day].exercises[idx].todayWeight = savedEx.todayWeight || '';
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // Load weight history
+                const historyResult = await storage.get('boyd-weight-history');
+                if (historyResult) {
+                    weightHistory = JSON.parse(historyResult.value);
+                }
+
+                const progressResult = await storage.get('boyd-progress');
+                if (progressResult) {
+                    progressData = JSON.parse(progressResult.value);
+                    updateProgressDisplay();
+                }
+            } catch (error) {
+                // Silently handle errors
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tab === 'training') {
+                displayTrainingPlan();
+            } else if (tab === 'graphs') {
+                displayProgressGraphs();
+            }
+        }
+
+        function updateGraphDay() {
+            displayProgressGraphs();
+        }
+
+        function debugWeightHistory() {
+            const keys = Object.keys(weightHistory);
+            if (keys.length === 0) {
+                alert('⚠️ No weight history found!\n\nThis means weights are not being saved properly.\n\nTry:\n1. Enter a weight in Training Split\n2. Click "Set as Reference"\n3. Come back here and click this button again');
+                return;
+            }
+            
+            let message = `✅ Found ${keys.length} exercises with history:\n\n`;
+            keys.forEach(key => {
+                const entries = weightHistory[key];
+                message += `${key}: ${entries.length} entries\n`;
+                entries.forEach(entry => {
+                    message += `  - ${entry.date}: ${entry.weight}\n`;
+                });
+                message += '\n';
+            });
+            alert(message);
+        }
+
+        let chartInstances = {};
+
+        function displayProgressGraphs() {
+            const selectedDay = document.getElementById('graphDaySelect').value;
+            const dayData = trainingPlan[selectedDay];
+            
+            if (!dayData || !dayData.exercises) return;
+
+            const container = document.getElementById('graphsContainer');
+            container.innerHTML = '';
+
+            dayData.exercises.forEach((exercise, idx) => {
+                const historyKey = `${selectedDay}-${idx}`;
+                const exerciseHistory = weightHistory[historyKey] || [];
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                cardDiv.style.marginBottom = '30px';
+                
+                cardDiv.innerHTML = `
+                    <h3 style="font-family: 'Oswald', sans-serif; color: var(--steel-blue); margin-bottom: 15px;">
+                        ${exercise.name}
+                    </h3>
+                    ${exerciseHistory.length === 0 ? `
+                        <p style="color: var(--light-text); text-align: center; padding: 40px;">
+                            No progress data yet. Enter weights and click "Set as Reference" to start tracking!
+                        </p>
+                    ` : `
+                        <canvas id="chart-${selectedDay}-${idx}" style="max-height: 300px;"></canvas>
+                        <div style="margin-top: 20px; padding: 15px; background: var(--light-bg); border-radius: 8px;">
+                            <strong style="color: var(--steel-blue);">History:</strong>
+                            <div style="max-height: 150px; overflow-y: auto; margin-top: 10px;">
+                                ${exerciseHistory.slice().reverse().map((entry, reverseIdx) => {
+                                    const actualIdx = exerciseHistory.length - 1 - reverseIdx;
+                                    return `
+                                    <div style="padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <strong>${entry.date}:</strong> 
+                                            <span id="weight-display-${historyKey}-${actualIdx}">${entry.weight}</span>
+                                            <input 
+                                                type="text" 
+                                                id="weight-edit-${historyKey}-${actualIdx}" 
+                                                value="${entry.weight}"
+                                                style="display: none; padding: 4px 8px; border: 2px solid var(--steel-blue); border-radius: 4px; width: 120px;"
+                                            >
+                                        </div>
+                                        <div>
+                                            <button 
+                                                onclick="editHistoryEntry('${historyKey}', ${actualIdx})"
+                                                id="edit-btn-${historyKey}-${actualIdx}"
+                                                style="padding: 4px 10px; background: var(--energy-orange); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-right: 5px;"
+                                            >
+                                                ✏️ Edit
+                                            </button>
+                                            <button 
+                                                onclick="saveHistoryEdit('${historyKey}', ${actualIdx})"
+                                                id="save-btn-${historyKey}-${actualIdx}"
+                                                style="display: none; padding: 4px 10px; background: var(--muscle-green); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-right: 5px;"
+                                            >
+                                                ✓ Save
+                                            </button>
+                                            <button 
+                                                onclick="cancelHistoryEdit('${historyKey}', ${actualIdx})"
+                                                id="cancel-btn-${historyKey}-${actualIdx}"
+                                                style="display: none; padding: 4px 10px; background: var(--light-text); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-right: 5px;"
+                                            >
+                                                ✕ Cancel
+                                            </button>
+                                            <button 
+                                                onclick="deleteHistoryEntry('${historyKey}', ${actualIdx})"
+                                                style="padding: 4px 10px; background: var(--power-red); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;"
+                                            >
+                                                🗑️ Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                `}).join('')}
+                            </div>
+                        </div>
+                    `}
+                `;
+
+                container.appendChild(cardDiv);
+
+                // Create chart if there's data
+                if (exerciseHistory.length > 0) {
+                    setTimeout(() => {
+                        const ctx = document.getElementById(`chart-${selectedDay}-${idx}`);
+                        if (ctx) {
+                            // Destroy old chart if it exists
+                            const chartKey = `chart-${selectedDay}-${idx}`;
+                            if (chartInstances[chartKey]) {
+                                chartInstances[chartKey].destroy();
+                            }
+
+                            // Parse weights (handle formats like "135 lbs" or "20/30/30 lbs")
+                            const weights = exerciseHistory.map(entry => {
+                                const weightStr = entry.weight.replace(/[^\d.\/]/g, '');
+                                // If multiple weights, take the max (heaviest set)
+                                if (weightStr.includes('/')) {
+                                    const nums = weightStr.split('/').map(n => parseFloat(n));
+                                    return Math.max(...nums);
+                                }
+                                return parseFloat(weightStr);
+                            });
+
+                            chartInstances[chartKey] = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: exerciseHistory.map(entry => entry.date),
+                                    datasets: [{
+                                        label: 'Weight (lbs)',
+                                        data: weights,
+                                        borderColor: '#E74C3C',
+                                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                        borderWidth: 3,
+                                        tension: 0.3,
+                                        fill: true,
+                                        pointRadius: 6,
+                                        pointHoverRadius: 8,
+                                        pointBackgroundColor: '#E74C3C',
+                                        pointBorderColor: '#fff',
+                                        pointBorderWidth: 2
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: true,
+                                    plugins: {
+                                        legend: {
+                                            display: true,
+                                            labels: {
+                                                font: {
+                                                    family: 'Oswald',
+                                                    size: 14
+                                                }
+                                            }
+                                        },
+                                        title: {
+                                            display: false
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: false,
+                                            ticks: {
+                                                font: {
+                                                    family: 'Lato',
+                                                    size: 12
+                                                },
+                                                callback: function(value) {
+                                                    return value + ' lbs';
+                                                }
+                                            },
+                                            grid: {
+                                                color: 'rgba(0, 0, 0, 0.05)'
+                                            }
+                                        },
+                                        x: {
+                                            ticks: {
+                                                font: {
+                                                    family: 'Lato',
+                                                    size: 11
+                                                },
+                                                maxRotation: 45,
+                                                minRotation: 45
+                                            },
+                                            grid: {
+                                                display: false
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }, 100);
+                }
+            });
+
+            if (dayData.exercises.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--light-text); padding: 40px;">No exercises found for this day.</p>';
+            }
+        }
+
+        function editHistoryEntry(historyKey, index) {
+            // Hide display elements, show edit elements
+            document.getElementById(`weight-display-${historyKey}-${index}`).style.display = 'none';
+            document.getElementById(`weight-edit-${historyKey}-${index}`).style.display = 'inline-block';
+            document.getElementById(`edit-btn-${historyKey}-${index}`).style.display = 'none';
+            document.getElementById(`save-btn-${historyKey}-${index}`).style.display = 'inline-block';
+            document.getElementById(`cancel-btn-${historyKey}-${index}`).style.display = 'inline-block';
+        }
+
+        function cancelHistoryEdit(historyKey, index) {
+            // Show display elements, hide edit elements
+            document.getElementById(`weight-display-${historyKey}-${index}`).style.display = 'inline';
+            document.getElementById(`weight-edit-${historyKey}-${index}`).style.display = 'none';
+            document.getElementById(`edit-btn-${historyKey}-${index}`).style.display = 'inline-block';
+            document.getElementById(`save-btn-${historyKey}-${index}`).style.display = 'none';
+            document.getElementById(`cancel-btn-${historyKey}-${index}`).style.display = 'none';
+        }
+
+        async function saveHistoryEdit(historyKey, index) {
+            const newWeight = document.getElementById(`weight-edit-${historyKey}-${index}`).value;
+            
+            if (!newWeight || newWeight.trim() === '') {
+                alert('Please enter a valid weight!');
+                return;
+            }
+
+            // Update the weight history
+            if (weightHistory[historyKey] && weightHistory[historyKey][index]) {
+                weightHistory[historyKey][index].weight = newWeight;
+                
+                // Save to storage
+                await storage.set('boyd-weight-history', JSON.stringify(weightHistory));
+                
+                alert('✓ Weight entry updated!');
+                
+                // Refresh the display
+                displayProgressGraphs();
+            }
+        }
+
+        async function deleteHistoryEntry(historyKey, index) {
+            if (!confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
+                return;
+            }
+
+            // Remove the entry from weight history
+            if (weightHistory[historyKey]) {
+                const deletedEntry = weightHistory[historyKey][index];
+                weightHistory[historyKey].splice(index, 1);
+                
+                // If no entries left, remove the key entirely
+                if (weightHistory[historyKey].length === 0) {
+                    delete weightHistory[historyKey];
+                }
+                
+                // Save to storage
+                await storage.set('boyd-weight-history', JSON.stringify(weightHistory));
+                
+                // Also log in progress history
+                progressData.history.unshift({
+                    type: 'weight-delete',
+                    date: new Date().toLocaleDateString(),
+                    note: `Deleted entry: ${deletedEntry.exerciseName} - ${deletedEntry.weight} (${deletedEntry.date})`
+                });
+                await storage.set('boyd-progress', JSON.stringify(progressData));
+                
+                alert('✓ Entry deleted!');
+                
+                // Refresh the display
+                displayProgressGraphs();
+                updateProgressDisplay();
+            }
+        }
+
+        async function generateCustomPlan() {
+            document.getElementById('trainingLoading').classList.add('active');
+            switchTab('training');
+            document.querySelector('[onclick="switchTab(\'training\')"]').classList.add('active');
+
+            const prompt = `Create a detailed weekly training plan for Boyd with these specifics:
+
+PROFILE:
+- 27 years old, 203 lbs, 5'10", intermediate lifter
+- Current phase: BULKING to build muscle
+- Training split: Mon-Chest, Tue-Back/Bis, Wed-Legs/Abs, Thu-Shoulders, Fri-Arms, Sat-Active recovery
+- Add 1 intense cardio session weekly
+
+CRITICAL INJURY CONSIDERATIONS:
+- Left elbow pain: NO standard barbell curls, NO exercises with arms hanging straight, use neutral grip variations
+- Shoulder issues: NO incline bench press, moderate weight on overhead movements, prefer flat bench and low-incline
+- Lower back stiffness: emphasize core stability, proper form cues
+
+Respond ONLY with valid JSON (no markdown, no backticks):
+{
+  "monday": {
+    "focus": "Chest",
+    "exercises": [
+      {"name": "Exercise name", "sets": "3-4", "reps": "8-12", "notes": "Form cues or injury modifications"}
+    ]
+  },
+  "tuesday": {...},
+  "wednesday": {...},
+  "thursday": {...},
+  "friday": {...},
+  "saturday": {"focus": "Active Recovery", "activities": ["Pickleball, swimming, yoga, or walking"]},
+  "cardioSession": {"type": "HIIT or steady state", "duration": "20-30 min", "bestDay": "Wednesday or Saturday"}
+}`;
+
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [{ role: "user", content: prompt }]
+                    })
+                });
+
+                const data = await response.json();
+                const textContent = data.content.find(item => item.type === "text")?.text || "";
+                const cleanJson = textContent.replace(/```json|```/g, '').trim();
+                trainingPlan = JSON.parse(cleanJson);
+                
+                await storage.set('boyd-training-plan', JSON.stringify(trainingPlan));
+                displayTrainingPlan();
+            } catch (error) {
+                console.error('Error generating plan:', error);
+                document.getElementById('trainingContent').innerHTML = `
+                    <div class="card">
+                        <p style="color: var(--power-red);">Error generating plan. Please try again.</p>
+                    </div>
+                `;
+            } finally {
+                document.getElementById('trainingLoading').classList.remove('active');
+            }
+        }
+
+        function displayTrainingPlan() {
+            if (!trainingPlan) return;
+
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+            let html = '<div class="content-grid">';
+            
+            days.forEach((day, index) => {
+                const dayData = trainingPlan[day];
+                html += `
+                    <div class="card">
+                        <div class="workout-day">
+                            <h3>${dayNames[index]}: ${dayData.focus}</h3>
+                            ${dayData.warmup ? `
+                                <p style="color: var(--energy-orange); font-weight: 600; margin: 10px 0; font-size: 0.95rem;">
+                                    🔥 Warmup: ${dayData.warmup}
+                                </p>
+                            ` : ''}
+                            ${dayData.exercises ? `
+                                <div class="exercise-list" style="margin-top: 15px;">
+                                    ${dayData.exercises.map((ex, exIndex) => `
+                                        <div class="exercise-item" style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.5); border-radius: 8px; position: relative;">
+                                            <button 
+                                                data-action="delete-exercise"
+                                                data-day="${day}"
+                                                data-index="${exIndex}"
+                                                class="history-action-btn"
+                                                style="position: absolute; top: 8px; right: 8px; padding: 4px 8px; background: #E74C3C; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600;"
+                                            >
+                                                ✕
+                                            </button>
+                                            <strong style="color: var(--steel-blue); font-size: 1.05rem;">${ex.name}</strong>
+                                            <br>
+                                            <span style="color: var(--dark-text); font-size: 0.95rem;">
+                                                3x${ex.reps}
+                                            </span>
+                                            <br>
+                                            <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                                <span style="color: var(--light-text); font-size: 0.85rem;">Reference: ${ex.weight}</span>
+                                                <input 
+                                                    type="text" 
+                                                    id="${day}-${exIndex}" 
+                                                    placeholder="Today's weight"
+                                                    value="${ex.todayWeight || ''}"
+                                                    style="padding: 6px 10px; border: 2px solid var(--steel-blue); border-radius: 6px; width: 140px; font-size: 0.9rem; background: white;"
+                                                    onchange="updateExerciseWeight('${day}', ${exIndex}, this.value)"
+                                                >
+                                                <button 
+                                                    data-action="save-reference"
+                                                    data-day="${day}"
+                                                    data-index="${exIndex}"
+                                                    class="history-action-btn"
+                                                    style="padding: 6px 12px; background: var(--muscle-green); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;"
+                                                    title="Update reference weight with today's weight"
+                                                >
+                                                    ✓ Set as Reference
+                                                </button>
+                                            </div>
+                                            ${ex.notes ? `<span style="color: var(--light-text); font-size: 0.85rem; display: block; margin-top: 8px;">💡 ${ex.notes}</span>` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <button 
+                                    data-action="add-exercise"
+                                    data-day="${day}"
+                                    class="history-action-btn"
+                                    style="width: 100%; margin-top: 15px; padding: 12px; background: var(--steel-blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;"
+                                >
+                                    + Add Exercise
+                                </button>
+                            ` : `
+                                <div class="exercise-list">
+                                    ${dayData.activities.map(act => `<div class="exercise-item">${act}</div>`).join('')}
+                                </div>
+                            `}
+                        </div>
+                        ${dayData.exercises ? `
+                            <button 
+                                data-action="complete-workout"
+                                data-day="${day}"
+                                class="history-action-btn btn-secondary" 
+                                style="width: 100%; margin-top: 15px;"
+                            >
+                                ✓ Complete ${dayNames[index]} Workout
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            
+            html += `
+                <div class="card" style="margin-top: 20px;">
+                    <h2>Training Notes</h2>
+                    <div class="injury-warning">
+                        <h4>💪 Progressive Overload Strategy</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 8px 0;">📈 Track your weights weekly and aim to increase 2.5-5 lbs when you can complete all sets</li>
+                            <li style="padding: 8px 0;">⏱️ Rest 90-120 seconds between sets for hypertrophy</li>
+                            <li style="padding: 8px 0;">🎯 Focus on controlled negatives (3-4 second lowering phase)</li>
+                            <li style="padding: 8px 0;">🔄 Deload every 4-6 weeks by reducing weight 20-30%</li>
+                            <li style="padding: 8px 0;">📝 Enter today's weights and click "Set as Reference" to update your baseline</li>
+                        </ul>
+                    </div>
+                    <p style="margin: 20px 0 15px; font-weight: 600;">Need modifications or have questions?</p>
+                    <button 
+                        data-action="talk-to-coach"
+                        class="history-action-btn btn-secondary"
+                    >Talk to AI Coach</button>
+                    <button 
+                        data-action="request-substitution"
+                        class="history-action-btn btn-secondary"
+                    >🔄 Request Exercise Substitution</button>
+                </div>
+            `;
+
+            document.getElementById('trainingContent').innerHTML = html;
+        }
+
+        async function updateExerciseWeight(day, exerciseIndex, weight) {
+            if (!trainingPlan[day] || !trainingPlan[day].exercises) return;
+            
+            trainingPlan[day].exercises[exerciseIndex].todayWeight = weight;
+            await storage.set('boyd-current-weights', JSON.stringify(trainingPlan));
+        }
+
+        async function saveAsReference(day, exerciseIndex) {
+            if (!trainingPlan[day] || !trainingPlan[day].exercises) return;
+            
+            const exercise = trainingPlan[day].exercises[exerciseIndex];
+            const todayWeight = exercise.todayWeight;
+            
+            if (!todayWeight || todayWeight.trim() === '') {
+                alert('Please enter a weight first!');
+                return;
+            }
+
+            // Create history entry key
+            const historyKey = `${day}-${exerciseIndex}`;
+            
+            // Initialize history for this exercise if it doesn't exist
+            if (!weightHistory[historyKey]) {
+                weightHistory[historyKey] = [];
+            }
+
+            // Add entry to weight history
+            weightHistory[historyKey].push({
+                date: new Date().toLocaleDateString(),
+                weight: todayWeight,
+                exerciseName: exercise.name
+            });
+
+            // Update the reference weight
+            exercise.weight = todayWeight;
+            exercise.todayWeight = ''; // Clear today's weight after saving as reference
+            
+            // Save to storage
+            await storage.set('boyd-current-weights', JSON.stringify(trainingPlan));
+            await storage.set('boyd-weight-history', JSON.stringify(weightHistory));
+            
+            // Log the progress
+            progressData.history.unshift({
+                type: 'weight-update',
+                date: new Date().toLocaleDateString(),
+                note: `${exercise.name}: Updated to ${todayWeight}`
+            });
+            await storage.set('boyd-progress', JSON.stringify(progressData));
+            
+            alert(`✓ Reference weight updated for ${exercise.name}!\n\nProgress logged for tracking.`);
+            
+            // Refresh the display
+            displayTrainingPlan();
+            updateProgressDisplay();
+            
+            // If on graphs tab, refresh graphs
+            if (document.getElementById('graphs').classList.contains('active')) {
+                displayProgressGraphs();
+            }
+        }
+
+        async function completeWorkoutDay(day) {
+            const dayNames = {
+                monday: 'Monday - Chest',
+                tuesday: 'Tuesday - Back & Biceps',
+                wednesday: 'Wednesday - Legs & Abs',
+                thursday: 'Thursday - Shoulders',
+                friday: 'Friday - Arms'
+            };
+
+            progressData.workoutsCompleted++;
+            progressData.history.unshift({
+                type: 'workout',
+                date: new Date().toLocaleDateString(),
+                note: `Completed ${dayNames[day]}`
+            });
+            
+            await storage.set('boyd-progress', JSON.stringify(progressData));
+            updateProgressDisplay();
+            alert(`💪 ${dayNames[day]} completed! Great work!`);
+        }
+
+        async function askForSubstitution() {
+            const exercise = prompt("Which exercise is bothering you? (e.g., 'bench press hurts my shoulder')");
+            if (!exercise) return;
+
+            document.getElementById('coach').classList.add('active');
+            document.getElementById('training').classList.remove('active');
+            document.querySelector('[onclick="switchTab(\'coach\')"]').classList.add('active');
+            document.querySelector('[onclick="switchTab(\'training\')"]').classList.remove('active');
+
+            const chatContainer = document.getElementById('chatContainer');
+            const coachInput = document.getElementById('coachInput');
+            
+            coachInput.value = `The ${exercise} is bothering me today. What's a good substitute that won't aggravate my injuries?`;
+            
+            await askCoach();
+        }
+
+        async function generateNutritionPlan() {
+            document.getElementById('nutritionLoading').classList.add('active');
+
+            const prompt = `Create a nutrition plan for Boyd (bulking phase):
+- 203 lbs, building muscle
+- Goal: 200g+ protein daily
+- Diet style: Whole foods, high protein (meat, eggs, protein shakes)
+- No dietary restrictions
+- Occasional cheat meals acceptable (burgers, Asian food)
+
+Provide a day's worth of meals. Respond ONLY with valid JSON (no markdown):
+{
+  "breakfast": {"meal": "Description", "protein": "50g", "calories": "600"},
+  "lunch": {"meal": "Description", "protein": "60g", "calories": "800"},
+  "dinner": {"meal": "Description", "protein": "70g", "calories": "900"},
+  "snacks": [{"snack": "Description", "protein": "20g"}],
+  "totalProtein": "200g+",
+  "totalCalories": "3000-3200",
+  "tips": ["Tip 1", "Tip 2"]
+}`;
+
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [{ role: "user", content: prompt }]
+                    })
+                });
+
+                const data = await response.json();
+                const textContent = data.content.find(item => item.type === "text")?.text || "";
+                const cleanJson = textContent.replace(/```json|```/g, '').trim();
+                nutritionPlan = JSON.parse(cleanJson);
+                
+                await storage.set('boyd-nutrition-plan', JSON.stringify(nutritionPlan));
+                displayNutritionPlan();
+            } catch (error) {
+                console.error('Error generating nutrition plan:', error);
+            } finally {
+                document.getElementById('nutritionLoading').classList.remove('active');
+            }
+        }
+
+        function displayNutritionPlan() {
+            if (!nutritionPlan) return;
+
+            const html = `
+                <div class="content-grid">
+                    <div class="card">
+                        <h2>Today's Meals</h2>
+                        
+                        <div class="nutrition-item">
+                            <h3>Breakfast</h3>
+                            <p>${nutritionPlan.breakfast.meal}</p>
+                            <div class="macros">
+                                <span class="macro-badge">🥩 ${nutritionPlan.breakfast.protein}</span>
+                                <span class="macro-badge">🔥 ${nutritionPlan.breakfast.calories}</span>
+                            </div>
+                        </div>
+
+                        <div class="nutrition-item">
+                            <h3>Lunch</h3>
+                            <p>${nutritionPlan.lunch.meal}</p>
+                            <div class="macros">
+                                <span class="macro-badge">🥩 ${nutritionPlan.lunch.protein}</span>
+                                <span class="macro-badge">🔥 ${nutritionPlan.lunch.calories}</span>
+                            </div>
+                        </div>
+
+                        <div class="nutrition-item">
+                            <h3>Dinner</h3>
+                            <p>${nutritionPlan.dinner.meal}</p>
+                            <div class="macros">
+                                <span class="macro-badge">🥩 ${nutritionPlan.dinner.protein}</span>
+                                <span class="macro-badge">🔥 ${nutritionPlan.dinner.calories}</span>
+                            </div>
+                        </div>
+
+                        <div class="nutrition-item" style="border-color: var(--energy-orange);">
+                            <h3>Snacks</h3>
+                            ${nutritionPlan.snacks.map(s => `
+                                <p>• ${s.snack} (${s.protein})</p>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Daily Targets</h2>
+                        <div class="stats-banner" style="margin: 0;">
+                            <div class="stat-card" style="background: var(--light-bg); color: var(--steel-blue);">
+                                <span class="stat-value" style="color: var(--power-red);">${nutritionPlan.totalProtein}</span>
+                                <span class="stat-label" style="color: var(--steel-blue);">Total Protein</span>
+                            </div>
+                            <div class="stat-card" style="background: var(--light-bg); color: var(--steel-blue);">
+                                <span class="stat-value" style="color: var(--energy-orange);">${nutritionPlan.totalCalories}</span>
+                                <span class="stat-label" style="color: var(--steel-blue);">Total Calories</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 30px;">
+                            <h3 style="font-family: 'Oswald', sans-serif; color: var(--muscle-green); margin-bottom: 15px;">Boyd's Nutrition Tips</h3>
+                            <div class="exercise-list">
+                                ${nutritionPlan.tips.map(tip => `<div class="exercise-item">${tip}</div>`).join('')}
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" onclick="generateNutritionPlan()">🔄 Generate New Meal Plan</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('nutritionContent').innerHTML = html;
+        }
+
+        async function askCoach() {
+            const input = document.getElementById('coachInput');
+            const question = input.value.trim();
+            if (!question) return;
+
+            const chatContainer = document.getElementById('chatContainer');
+            
+            chatContainer.innerHTML += `
+                <div class="message user">
+                    <strong>You:</strong> ${question}
+                </div>
+            `;
+
+            input.value = '';
+            input.disabled = true;
+
+            chatContainer.innerHTML += `
+                <div class="message">
+                    <strong>Coach:</strong> <em>Thinking...</em>
+                </div>
+            `;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            const prompt = `You are Boyd's personal training coach. Boyd is:
+- 27, 203 lbs, 5'10", intermediate lifter
+- Currently bulking to build muscle
+- Has left elbow pain (avoid standard curls, hanging exercises)
+- Has previous shoulder injuries (no incline bench, careful with overhead)
+- Lower back stiffness (needs core work)
+- Works from home, travels for field work in summer
+- Eats high protein (200g/day), whole foods
+- Training split: Mon-Chest, Tue-Back/Bis, Wed-Legs/Abs, Thu-Shoulders, Fri-Arms
+
+Boyd asks: "${question}"
+
+Provide a helpful, personalized response (2-4 sentences) as his coach.`;
+
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [{ role: "user", content: prompt }]
+                    })
+                });
+
+                const data = await response.json();
+                const answer = data.content.find(item => item.type === "text")?.text || "I'm here to help!";
+                
+                const messages = chatContainer.querySelectorAll('.message');
+                messages[messages.length - 1].innerHTML = `<strong>Coach:</strong> ${answer}`;
+                
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                input.disabled = false;
+            }
+        }
+
+        async function logWorkout() {
+            progressData.workoutsCompleted++;
+            progressData.history.unshift({
+                type: 'workout',
+                date: new Date().toLocaleDateString(),
+                note: 'Workout completed'
+            });
+            
+            await storage.set('boyd-progress', JSON.stringify(progressData));
+            updateProgressDisplay();
+            alert('💪 Workout logged! Great work, Boyd!');
+        }
+
+        async function logNutrition() {
+            progressData.nutritionDays++;
+            progressData.history.unshift({
+                type: 'nutrition',
+                date: new Date().toLocaleDateString(),
+                note: 'Hit 200g+ protein goal'
+            });
+            
+            await storage.set('boyd-progress', JSON.stringify(progressData));
+            updateProgressDisplay();
+            alert('🥩 Nutrition goal logged! Protein on point!');
+        }
+
+        async function updateBodyweight() {
+            const input = document.getElementById('newBodyweight');
+            const photoInput = document.getElementById('progressPhoto');
+            const newWeight = parseFloat(input.value);
+            
+            if (!newWeight || isNaN(newWeight) || newWeight <= 0) {
+                alert('Please enter a valid weight!');
+                return;
+            }
+
+            const today = new Date().toLocaleDateString();
+            
+            // Handle photo if uploaded
+            let photoData = null;
+            if (photoInput.files && photoInput.files[0]) {
+                const file = photoInput.files[0];
+                photoData = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+            
+            // Update current bodyweight
+            progressData.currentBodyweight = newWeight;
+            
+            // Add to bodyweight history
+            if (!progressData.bodyweightHistory) {
+                progressData.bodyweightHistory = [];
+            }
+            progressData.bodyweightHistory.push({
+                date: today,
+                weight: newWeight,
+                photo: photoData
+            });
+            
+            // Add to general history
+            progressData.history.unshift({
+                type: 'bodyweight',
+                date: today,
+                note: `Bodyweight: ${newWeight} lbs${photoData ? ' (with photo)' : ''}`
+            });
+            
+            await storage.set('boyd-progress', JSON.stringify(progressData));
+            updateProgressDisplay();
+            updateBodyweightChart();
+            displayBodyweightHistory();
+            
+            input.value = '';
+            photoInput.value = '';
+            alert(`✓ Bodyweight updated to ${newWeight} lbs!`);
+        }
+
+        let bodyweightChartInstance = null;
+
+        function updateBodyweightChart() {
+            const canvas = document.getElementById('bodyweightChart');
+            const emptyMessage = document.getElementById('bodyweightChartEmpty');
+            
+            if (!progressData.bodyweightHistory || progressData.bodyweightHistory.length === 0) {
+                canvas.style.display = 'none';
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            
+            canvas.style.display = 'block';
+            emptyMessage.style.display = 'none';
+            
+            // Destroy old chart if exists
+            if (bodyweightChartInstance) {
+                bodyweightChartInstance.destroy();
+            }
+            
+            const ctx = canvas.getContext('2d');
+            const dates = progressData.bodyweightHistory.map(entry => entry.date);
+            const weights = progressData.bodyweightHistory.map(entry => entry.weight);
+            
+            bodyweightChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Bodyweight (lbs)',
+                        data: weights,
+                        borderColor: '#E74C3C',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#E74C3C',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: {
+                                    family: 'Oswald',
+                                    size: 14
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                font: {
+                                    family: 'Lato',
+                                    size: 12
+                                },
+                                callback: function(value) {
+                                    return value + ' lbs';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: 'Lato',
+                                    size: 11
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayBodyweightHistory() {
+            const container = document.getElementById('bodyweightHistory');
+            
+            if (!progressData.bodyweightHistory || progressData.bodyweightHistory.length === 0) {
+                container.innerHTML = '<p style="color: var(--light-text); text-align: center; padding: 40px;">No bodyweight entries yet.</p>';
+                return;
+            }
+            
+            let html = '';
+            progressData.bodyweightHistory.slice().reverse().forEach((entry, reverseIdx) => {
+                const actualIdx = progressData.bodyweightHistory.length - 1 - reverseIdx;
+                html += `
+                    <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--steel-blue);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <div style="font-size: 1.8rem; font-family: 'Oswald', sans-serif; color: var(--power-red); font-weight: 700;">
+                                    ${entry.weight} lbs
+                                </div>
+                                <div style="color: var(--light-text); margin-top: 5px;">${entry.date}</div>
+                            </div>
+                            ${entry.photo ? `
+                                <div style="flex-shrink: 0;">
+                                    <img src="${entry.photo}" alt="Progress photo" style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px solid var(--steel-blue); cursor: pointer;" onclick="viewPhoto('${entry.photo}', '${entry.date}')">
+                                    <div style="text-align: center; margin-top: 5px; font-size: 0.85rem; color: var(--light-text);">Click to enlarge</div>
+                                </div>
+                            ` : ''}
+                            <div style="flex-shrink: 0;">
+                                <button 
+                                    data-action="delete-bodyweight"
+                                    data-index="${actualIdx}"
+                                    class="history-action-btn"
+                                    style="padding: 8px 16px; background: #E74C3C; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;"
+                                >
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function viewPhoto(photoData, date) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;';
+            modal.innerHTML = `
+                <div style="max-width: 90%; max-height: 90%; text-align: center;">
+                    <div style="color: white; font-size: 1.2rem; margin-bottom: 15px; font-family: 'Oswald', sans-serif;">${date}</div>
+                    <img src="${photoData}" style="max-width: 100%; max-height: 80vh; border-radius: 12px; border: 3px solid white;">
+                    <div style="margin-top: 20px;">
+                        <button onclick="this.closest('div').parentElement.remove()" style="padding: 12px 30px; background: var(--power-red); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600;">Close</button>
+                    </div>
+                </div>
+            `;
+            modal.onclick = function(e) {
+                if (e.target === modal) modal.remove();
+            };
+            document.body.appendChild(modal);
+        }
+
+        function showAddExerciseModal(day) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                    <h2 style="font-family: 'Oswald', sans-serif; color: var(--steel-blue); margin-bottom: 20px; font-size: 2rem;">Add New Exercise</h2>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--steel-blue);">Exercise Name</label>
+                        <input type="text" id="modal-exercise-name" placeholder="e.g., Dumbbell Press" style="width: 100%; padding: 12px; border: 2px solid var(--steel-blue); border-radius: 8px; font-size: 1rem;">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--steel-blue);">Reps</label>
+                        <input type="text" id="modal-exercise-reps" placeholder="e.g., 12" value="12" style="width: 100%; padding: 12px; border: 2px solid var(--steel-blue); border-radius: 8px; font-size: 1rem;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--steel-blue);">Starting Weight (Highest Set)</label>
+                        <input type="text" id="modal-exercise-weight" placeholder="e.g., 135 lbs" value="0 lbs" style="width: 100%; padding: 12px; border: 2px solid var(--steel-blue); border-radius: 8px; font-size: 1rem;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button id="modal-save-btn" style="flex: 1; padding: 14px; background: var(--power-red); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem;">Add Exercise</button>
+                        <button id="modal-cancel-btn" style="flex: 1; padding: 14px; background: var(--light-text); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem;">Cancel</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Focus on the first input
+            setTimeout(() => {
+                document.getElementById('modal-exercise-name').focus();
+            }, 100);
+            
+            // Handle save
+            document.getElementById('modal-save-btn').addEventListener('click', async function() {
+                const name = document.getElementById('modal-exercise-name').value.trim();
+                const reps = document.getElementById('modal-exercise-reps').value.trim();
+                const weight = document.getElementById('modal-exercise-weight').value.trim();
+                
+                if (!name) {
+                    alert('Please enter an exercise name');
+                    return;
+                }
+                
+                trainingPlan[day].exercises.push({
+                    name: name,
+                    reps: reps,
+                    weight: weight,
+                    notes: ''
+                });
+                
+                await storage.set('boyd-current-weights', JSON.stringify(trainingPlan));
+                displayTrainingPlan();
+                modal.remove();
+                alert('✓ Exercise added!');
+            });
+            
+            // Handle cancel
+            document.getElementById('modal-cancel-btn').addEventListener('click', function() {
+                modal.remove();
+            });
+            
+            // Close on outside click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function updateProgressDisplay() {
+            const weeklyPercent = (progressData.workoutsCompleted % progressData.weeklyGoal) / progressData.weeklyGoal * 100;
+            document.getElementById('weeklyProgressBar').style.width = weeklyPercent + '%';
+            document.getElementById('weeklyProgress').textContent = `${progressData.workoutsCompleted % progressData.weeklyGoal}/${progressData.weeklyGoal} Days`;
+
+            // Update bodyweight display
+            document.getElementById('currentBodyweight').textContent = progressData.currentBodyweight + ' lbs';
+            if (progressData.bodyweightHistory && progressData.bodyweightHistory.length > 0) {
+                const lastEntry = progressData.bodyweightHistory[progressData.bodyweightHistory.length - 1];
+                document.getElementById('lastWeightUpdate').textContent = `Last updated: ${lastEntry.date}`;
+            }
+
+            const historyContainer = document.getElementById('historyContent');
+            if (progressData.history && progressData.history.length > 0) {
+                let html = '';
+                progressData.history.slice(0, 15).forEach((item, index) => {
+                    html += `
+                        <div style="background: var(--light-bg); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--power-red);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <strong>${item.date}</strong> - ${item.note}
+                                </div>
+                                <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                                    <button 
+                                        data-action="edit"
+                                        data-index="${index}"
+                                        class="history-action-btn"
+                                        style="padding: 6px 12px; background: #E67E22; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;"
+                                    >
+                                        ✏️ Edit
+                                    </button>
+                                    <button 
+                                        data-action="delete"
+                                        data-index="${index}"
+                                        class="history-action-btn"
+                                        style="padding: 6px 12px; background: #E74C3C; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;"
+                                    >
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                historyContainer.innerHTML = html;
+            } else {
+                historyContainer.innerHTML = '<p style="color: var(--light-text); text-align: center; padding: 40px;">No history yet. Start logging your workouts!</p>';
+            }
+        }
+
+        // Initialize
+        loadSavedData();
+        
+        // Set up global click handler for edit/delete buttons
+        // Do this immediately, not waiting for DOMContentLoaded
+        setTimeout(function() {
+            document.body.addEventListener('click', async function(e) {
+                // Find if clicked element or its parent is a history action button
+                const target = e.target.closest('.history-action-btn');
+                if (!target) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const action = target.getAttribute('data-action');
+                const index = parseInt(target.getAttribute('data-index'));
+                const day = target.getAttribute('data-day');
+                
+                
+                if (action === 'update-bodyweight') {
+                    await updateBodyweight();
+                } else if (action === 'save-reference') {
+                    await saveAsReference(day, index);
+                } else if (action === 'delete-exercise') {
+                    if (confirm('Are you sure you want to delete this exercise?')) {
+                        trainingPlan[day].exercises.splice(index, 1);
+                        await storage.set('boyd-current-weights', JSON.stringify(trainingPlan));
+                        displayTrainingPlan();
+                        alert('✓ Exercise deleted!');
+                    }
+                } else if (action === 'add-exercise') {
+                    showAddExerciseModal(day);
+                } else if (action === 'complete-workout') {
+                    await completeWorkoutDay(day);
+                } else if (action === 'talk-to-coach') {
+                    switchTab('coach');
+                    document.querySelector('[onclick="switchTab(\'coach\')"]').classList.add('active');
+                } else if (action === 'request-substitution') {
+                    await askForSubstitution();
+                } else if (action === 'edit') {
+                    if (!progressData.history[index]) {
+                        alert('Error: Entry not found');
+                        return;
+                    }
+                    const entry = progressData.history[index];
+                    const newNote = prompt('Edit entry note:', entry.note);
+                    if (newNote !== null && newNote.trim() !== '') {
+                        progressData.history[index].note = newNote.trim();
+                        await storage.set('boyd-progress', JSON.stringify(progressData));
+                        updateProgressDisplay();
+                        alert('✓ Entry updated!');
+                    }
+                } else if (action === 'delete') {
+                    if (!progressData.history[index]) {
+                        alert('Error: Entry not found');
+                        return;
+                    }
+                    if (confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
+                        progressData.history.splice(index, 1);
+                        await storage.set('boyd-progress', JSON.stringify(progressData));
+                        updateProgressDisplay();
+                        alert('✓ Entry deleted!');
+                    }
+                } else if (action === 'delete-bodyweight') {
+                    if (!progressData.bodyweightHistory[index]) {
+                        alert('Error: Bodyweight entry not found');
+                        return;
+                    }
+                    if (confirm('Are you sure you want to delete this bodyweight entry? This cannot be undone.')) {
+                        const deletedEntry = progressData.bodyweightHistory[index];
+                        progressData.bodyweightHistory.splice(index, 1);
+                        
+                        // Update current bodyweight if this was the latest entry
+                        if (progressData.bodyweightHistory.length > 0) {
+                            progressData.currentBodyweight = progressData.bodyweightHistory[progressData.bodyweightHistory.length - 1].weight;
+                        } else {
+                            progressData.currentBodyweight = 203; // Reset to starting weight
+                        }
+                        
+                        await storage.set('boyd-progress', JSON.stringify(progressData));
+                        updateProgressDisplay();
+                        updateBodyweightChart();
+                        displayBodyweightHistory();
+                        alert('✓ Bodyweight entry deleted!');
+                    }
+                }
+            });
+            
+            // Initialize bodyweight chart and history on load
+            updateBodyweightChart();
+            displayBodyweightHistory();
+        }, 100);
+    </script>
+</body>
+</html>
